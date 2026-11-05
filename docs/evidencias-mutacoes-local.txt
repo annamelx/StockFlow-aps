@@ -1,0 +1,31 @@
+EVIDÊNCIA TÉCNICA PRELIMINAR — MUTAÇÕES EM CÓPIAS TEMPORÁRIAS
+Data: 2026-11-05
+
+A verificação abaixo usou um runner local com substitutos mínimos das asserções
+JUnit (ambiente de geração sem Maven). NÃO se trata dos relatórios oficiais JUnit/Maven.
+A equipe deverá reproduzir em Maven, guardar prints/logs e revisar os resultados.
+
+Mutação 1 (cópia fora do projeto entregue):
+No ServicoLoja.confirmarVenda, desabilitado o retorno idempotente para venda CONFIRMADA.
+Teste-alvo confirmarDuasVezesNaoBaixaEstoqueNovamente: FALHOU como esperado.
+
+Mutação 2 (cópia fora do projeto entregue):
+No ServicoLoja.devolver, desabilitada a validação de status CONFIRMADA com false &&.
+Teste-alvo devolucaoDeVendaPendenteEhRejeitada: FALHOU como esperado.
+
+Depois, o código original foi recompilado e reexecutado sem mutações.
+Resultado do runner local: 27 testes passaram; 0 falharam.
+
+Execução oficial pendente: mvn clean test
+
+SAÍDA REAL DA EXECUÇÃO TEMPORÁRIA, MUTAÇÃO 1:
+FAIL confirmarDuasVezesNaoBaixaEstoqueNovamente: br.ufpb.aps.grupo12.dominio.ErroNegocio: Venda cancelada n?o pode ser confirmada.
+FAIL observerSoRecebeEventoAposCommitEAlertaEstoqueMinimo: br.ufpb.aps.grupo12.dominio.ErroNegocio: Venda cancelada n?o pode ser confirmada.
+RESULT 25 passed, 2 failed
+
+SAÍDA REAL DA EXECUÇÃO TEMPORÁRIA, MUTAÇÃO 2:
+FAIL devolucaoDeVendaPendenteEhRejeitada: java.lang.AssertionError: expected exception class br.ufpb.aps.grupo12.dominio.ErroNegocio but none
+RESULT 26 passed, 1 failed
+
+RESULTADO SEM MUTAÇÃO:
+RESULT 27 passed, 0 failed

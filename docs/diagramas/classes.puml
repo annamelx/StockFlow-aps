@@ -1,0 +1,146 @@
+@startuml
+' Diagrama de classes UML do código Java entregue - APS Grupo 12
+skinparam backgroundColor #FFFFFF
+skinparam classBackgroundColor #F8F5FF
+skinparam classBorderColor #7C3AED
+skinparam arrowColor #7C3AED
+skinparam packageBorderColor #C4B5FD
+skinparam packageBackgroundColor #FAF5FF
+skinparam shadowing false
+hide empty methods
+
+package "Domínio" {
+  enum Perfil { GERENTE; VENDEDOR }
+  enum EstadoVenda { PENDENTE; CONFIRMADA; CANCELADA }
+  enum TipoMovimentacao { ENTRADA_REPOSICAO; SAIDA_VENDA; ENTRADA_DEVOLUCAO }
+  class Produto <<record>> {
+    - id: String
+    - nome: String
+    - precoCentavos: long
+    - estoque: int
+    - estoqueMinimo: int
+    + comEstoque(saldo: int): Produto
+  }
+  class ItemVenda <<record>> {
+    - produtoId: String
+    - quantidade: int
+    - precoUnitarioCentavos: long
+    - descontoCentavos: long
+    + brutoCentavos(): long
+    + liquidoCentavos(): long
+    + restituiAte(qtd: int): long
+  }
+  class Venda <<record>> {
+    - id: String
+    - estado: EstadoVenda
+    - itens: List<ItemVenda>
+    - subtotalCentavos: long
+    - descontoCentavos: long
+    - totalCentavos: long
+    + comEstado(novo: EstadoVenda): Venda
+    + item(produtoId: String): ItemVenda
+  }
+  class Devolucao <<record>> {
+    - id: String
+    - vendaId: String
+    - produtoId: String
+    - quantidade: int
+    - reembolsoCentavos: long
+  }
+  class Movimentacao <<record>> {
+    - id: String
+    - operacaoId: String
+    - produtoId: String
+    - tipo: TipoMovimentacao
+    - quantidade: int
+  }
+  Venda "1" *-- "1..*" ItemVenda
+  Venda "1" --> "1" EstadoVenda
+  Venda "1" <-- "0..*" Devolucao : refere-se a
+  Produto "1" <-- "0..*" ItemVenda : produtoId
+  Produto "1" <-- "0..*" Movimentacao : produtoId
+}
+package "Serviços" {
+  class ServicoLoja {
+    - repositorio: Repositorio
+    - observadores: List<ObservadorEstoque>
+    + cadastrarProduto(perfil, produto): void
+    + abrirVenda(perfil, id, itens, politica): Venda
+    + confirmarVenda(perfil, id): Venda
+    + cancelarVendaPendente(perfil, id): Venda
+    + devolver(perfil, id, vendaId, produtoId, quantidade): Devolucao
+    + reporEstoque(perfil, produtoId, quantidade, lancamentoId): Produto
+    + consultarReceitaLiquidaCentavos(perfil): long
+  }
+  class LojaFacade <<Facade>> {
+    - servico: ServicoLoja
+    - exportador: ExportadorRelatorio
+    + abrirVenda(...): Venda
+    + confirmar(...): Venda
+    + devolver(...): Devolucao
+    + estoque(...): List<Produto>
+    + relatorio(...): String
+  }
+  LojaFacade --> ServicoLoja
+}
+package "Persistência" {
+  interface Repositorio {
+    + consultar(funcao): T
+    + transacionar(funcao): T
+  }
+  class RepositorioCsvAtomico {
+    - arquivo: Path
+    - trava: Path
+    - interceptor: InterceptorCommit
+    - ler(): EstadoDados
+    - gravarAtomico(dados): void
+    + restaurarDemo(): void
+  }
+  class EstadoDados {
+    + produtos: Map<String,Produto>
+    + vendas: Map<String,Venda>
+    + devolucoes: Map<String,Devolucao>
+    + movimentacoes: Map<String,Movimentacao>
+    + copiar(): EstadoDados
+  }
+  Repositorio <|.. RepositorioCsvAtomico
+  RepositorioCsvAtomico --> EstadoDados
+  EstadoDados o-- "0..*" Produto
+  EstadoDados o-- "0..*" Venda
+  EstadoDados o-- "0..*" Devolucao
+  EstadoDados o-- "0..*" Movimentacao
+}
+package "Strategy (comportamental)" {
+  interface PoliticaDesconto <<Strategy>> {
+    + descontoEmCentavos(subtotal: long): long
+    + nome(): String
+  }
+  class DescontoPercentual
+  class DescontoFixo
+  PoliticaDesconto <|.. DescontoPercentual
+  PoliticaDesconto <|.. DescontoFixo
+}
+package "Observer (comportamental)" {
+  interface ObservadorEstoque <<Observer>> { + aoAlterarEstoque(evento): void }
+  class AlertaEstoqueMinimo
+  class EventoEstoque <<record>>
+  ObservadorEstoque <|.. AlertaEstoqueMinimo
+  ObservadorEstoque ..> EventoEstoque
+}
+package "Adapter (estrutural)" {
+  interface ExportadorRelatorio { + exportar(dados: EstadoDados): String }
+  class AdaptadorRelatorio <<Adapter>>
+  class ExportadorAntigo <<simulado>> { + arquivo(linhas): String }
+  ExportadorRelatorio <|.. AdaptadorRelatorio
+  AdaptadorRelatorio --> ExportadorAntigo
+}
+class App <<console>>
+ServicoLoja --> Repositorio : injeção
+ServicoLoja --> PoliticaDesconto : usa
+ServicoLoja --> "0..*" ObservadorEstoque : notifica
+LojaFacade --> ExportadorRelatorio : usa
+App --> LojaFacade : usa
+ServicoLoja ..> Venda
+ServicoLoja ..> Devolucao
+ServicoLoja ..> Produto
+@enduml
