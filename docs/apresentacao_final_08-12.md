@@ -1,4 +1,4 @@
-# Roteiro da apresentação final — Grupo 12 — 08/12/2026
+# Roteiro da apresentação final - Grupo 12 - 08/12/2026
 
 **15 min de apresentação e 10 min de perguntas** (orientações do professor).
 
