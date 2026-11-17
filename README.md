@@ -202,6 +202,6 @@ Cada integrante deve enviar alterações pela própria conta e explicar as mudan
 
 <div align="center">
 
-💜 *Tecnologia que cuida dos dados: consistência, clareza e responsabilidade.*
+💜 *Feito po Equipe 12.*
 
 </div>
