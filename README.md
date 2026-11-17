@@ -188,6 +188,6 @@ Os resultados oficiais deverão ser capturados em `target/surefire-reports/`. Pa
 
 <div align="center">
 
-💜 *Feito po Equipe 12.*
+💜 *Feito por Equipe 12.*
 
 </div>
