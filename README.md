@@ -161,15 +161,6 @@ Os resultados oficiais deverão ser capturados em `target/surefire-reports/`. Pa
 | [Guia IntelliJ/GitHub](../../Downloads/APS_Grupo12_Projeto_Java_Documentacao_e_Slides/APS_Grupo12/docs/guia-intellij-github.md) | Importação no Windows, testes, colaboração e push. |
 | [Evidência técnica preliminar de mutações](../../Downloads/APS_Grupo12_Projeto_Java_Documentacao_e_Slides/APS_Grupo12/docs/evidencias-mutacoes-local.txt) | Dois defeitos detectados em cópias temporárias, sem execução oficial Maven. |
 
-## 📅 Cronograma APS — 2026.2
-
-| Data | Marco |
-|---|---|
-| **12/11/2026** | 1ª parcial: funcionalidades, classes, arquitetura e justificativas (5 min). |
-| **24/11/2026** | 2ª parcial: organização implementada, padrões e testes (5 min). |
-| **01/12/2026 até 23h59** | Entrega final do pacote e registro do link. |
-| **08/12/2026** | Apresentação final **Grupo 12** (15 min + 10 min de perguntas). |
-
 ## 👩‍💻 Equipe
 
 <div align="center">
@@ -184,11 +175,6 @@ Os resultados oficiais deverão ser capturados em `target/surefire-reports/`. Pa
 **Instituição:** Universidade Federal da Paraíba (UFPB), Campus IV
 
 </div>
-
-### 🧷 Autoria e commits
-
-Cada integrante deve enviar alterações pela própria conta e explicar as mudanças implementadas. O histórico do GitHub deve comprovar a evolução real do projeto. A divisão de tarefas não substitui a compreensão individual de um caso de uso completo, seus testes e a persistência.
-
 ---
 
 ## ⚠️ Limitações e entregas a finalizar
