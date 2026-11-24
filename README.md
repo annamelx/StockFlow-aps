@@ -178,17 +178,6 @@ Os resultados oficiais deverão ser capturados em `target/surefire-reports/`. Pa
 </div>
 ---
 
-## ⚠️ Limitações e entregas a finalizar
-
-- Receber e revisar a documentação anterior **Toda Chick Bolsas & Cia.**; registrar quais requisitos foram mantidos, alterados ou adicionados e seu link original.
-- Rodar `mvn clean test` no computador da equipe, guardar o relatório e fazer os **dois defeitos intencionais com falha e restauração**.
-- Confirmar o funcionamento do CSV com renomeação atômica no Windows/IntelliJ que será usado na apresentação.
-- Completar fotos, identificações, e-mails e perfis GitHub; revisar diagramas e decisões com o código definitivo.
-- Criar e apresentar a melhoria antes/depois com um diff de commit, documentar as decisões humanas e o uso de IA.
-- Revisar e ensaiar os **slides iniciais da parcial de 12/11**, já incluídos, e depois preparar os slides reais de 24/11 e da apresentação final.
-
-<div align="center">
-
 💜 *Feito por Equipe 12.*
 
 </div>
