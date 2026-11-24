@@ -65,7 +65,7 @@ O tema foi definido pelo professor e deve utilizar como referência a documenta�
 Estrutura implementada em **Java 21**, usando arquitetura em camadas, injeção de dependências por construtor e quatro padrões de projeto **GoF** em duas categorias.
 
 <div>
-  <img src="./plantuml-diagram.png" alt="">
+  <img src="./diagrama arquitetura.png" alt="">
 </div>
 
 | GoF | Categoria | Uso no sistema |
