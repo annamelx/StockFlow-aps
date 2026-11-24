@@ -170,6 +170,8 @@ Os resultados oficiais deverão ser capturados em `target/surefire-reports/`. Pa
 | **Anna Karolina** | *Adicionar perfil* | *Adicionar* | *Adicionar* |
 | **Awanna Costa** | *Adicionar perfil* | *Adicionar* | *Adicionar* |
 | **Cynthia Souza** | *Adicionar perfil* | *Adicionar* | *Adicionar* |
+| **Caio** | *Adicionar perfil* | *Adicionar* | *Adicionar* |
+
 
 **Disciplina:** Análise e Projeto de Sistemas · **Professor:** Dr. Dorgival Netto  
 **Instituição:** Universidade Federal da Paraíba (UFPB), Campus IV
