@@ -47,15 +47,9 @@ O tema foi definido pelo professor e deve utilizar como referência a documenta�
 
 ### 🔄 Ciclo de uma venda
 
-```mermaid
-stateDiagram-v2
-  [*] --> PENDENTE: abrir venda
-  PENDENTE --> CONFIRMADA: confirmar e baixar estoque
-  PENDENTE --> CANCELADA: cancelar antes da confirmação
-  CONFIRMADA --> CONFIRMADA: confirmar novamente sem novo efeito
-  CONFIRMADA --> [*]
-  CANCELADA --> [*]
-```
+<div>
+  <img src="./plantuml-diagram.png" alt="">
+</div>
 
 ### 👥 Permissões
 
@@ -70,17 +64,9 @@ stateDiagram-v2
 
 Estrutura implementada em **Java 21**, usando arquitetura em camadas, injeção de dependências por construtor e quatro padrões de projeto **GoF** em duas categorias.
 
-```mermaid
-flowchart TB
-    A[Console - App] --> B[LojaFacade - Facade]
-    B --> C[ServicoLoja - autorização e casos de uso]
-    C --> D[Domínio: Produto / Venda / ItemVenda / Devolucao]
-    C --> E[Repositorio - contrato]
-    E --> F[RepositorioCsvAtomico - snapshot CSV]
-    C --> G[PoliticaDesconto - Strategy]
-    C --> H[ObservadorEstoque - Observer]
-    B --> I[AdaptadorRelatorio - Adapter]
-```
+<div>
+  <img src="./plantuml-diagram.png" alt="">
+</div>
 
 | GoF | Categoria | Uso no sistema |
 |---|---|---|
