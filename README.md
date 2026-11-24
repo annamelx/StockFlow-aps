@@ -165,11 +165,12 @@ Os resultados oficiais deverão ser capturados em `target/surefire-reports/`. Pa
 
 <div align="center">
 
-| Integrante | GitHub | E-mail acadêmico | Foto |
+| Integrante | GitHub | E-mail acadêmico | 
 |---|---|---|---|
-| **Anna Karolina** | *Adicionar perfil* | *Adicionar* | *Adicionar* |
-| **Awanna Costa** | *Adicionar perfil* | *Adicionar* | *Adicionar* |
-| **Cynthia Souza** | *Adicionar perfil* | *Adicionar* | *Adicionar* |
+| **Anna Karolina** | *annamelx* | *anna.gomes@dcx.ufpb.br* 
+| **Awanna Costa** | *Adicionar perfil* | *Adicionar* | 
+| **Cynthia Souza** | *Adicionar perfil* | *Adicionar* | 
+| **Caio**          | *Adicionar perfil* | *Adicionar* | 
 
 **Disciplina:** Análise e Projeto de Sistemas · **Professor:** Dr. Dorgival Netto  
 **Instituição:** Universidade Federal da Paraíba (UFPB), Campus IV
