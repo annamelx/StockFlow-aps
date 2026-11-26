@@ -33,7 +33,7 @@ public final class ConsoleView {
         in = new Scanner(entrada);
         out = saida;
         out.println("\nSTOCKFLOW | ESTOQUE & VENDAS | APS UFPB 2026.2 | GRUPO 12");
-        out.println("Contas de demonstração: gerente@stockflow.demo / vendedora@stockflow.demo (senha stockflow2026)");
+        out.println("Contas de demonstração: gerente@stockflow.demo / karol@stockflow.demo (senha stockflow2026)");
         Usuario usuario = null;
         while (usuario == null) {
             try {

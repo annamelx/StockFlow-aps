@@ -10,7 +10,7 @@
 
 Uma loja precisa manter o saldo de produtos coerente com compras e devoluções. O sistema acadêmico oferece registro de produtos, reposição, abertura e confirmação de vendas, cancelamento de vendas pendentes, devolução vinculada à venda confirmada e consulta de histórico/relatório. Requisitos críticos: não vender além do saldo, não baixar estoque duas vezes, não devolver acima do vendido, manter centavos e estoque consistentes mesmo em falhas.
 
-**Fora do escopo atual:** autenticação por senha, pagamento real, nota fiscal, múltiplas lojas, emissão fiscal, integração bancária, interface web, controle de concorrência distribuída entre diferentes máquinas e documentos não fornecidos. O login usa duas contas fictícias de demonstração (`gerente@stockflow.demo` e `vendedora@stockflow.demo`, senha `stockflow2026`), sem cadastro de usuários.
+**Fora do escopo atual:** autenticação por senha, pagamento real, nota fiscal, múltiplas lojas, emissão fiscal, integração bancária, interface web, controle de concorrência distribuída entre diferentes máquinas e documentos não fornecidos. O login usa duas contas fictícias de demonstração (`gerente@stockflow.demo` e `karol@stockflow.demo`, senha `stockflow2026`), sem cadastro de usuários.
 
 ## 2. Perfis e autorização
 

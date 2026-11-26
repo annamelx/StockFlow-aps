@@ -88,8 +88,8 @@ class PadroesEExtensaoTest {
     @Test void autenticacaoDevolvePerfilCorretoERejeitaSenhaErrada() {
         ServicoAutenticacao auth = new ServicoAutenticacao(new ContasDemo());
         assertEquals(Perfil.GERENTE, auth.entrar("GERENTE@stockflow.demo", ContasDemo.SENHA_DEMO).perfil());
-        assertEquals(Perfil.VENDEDOR, auth.entrar("vendedora@stockflow.demo", ContasDemo.SENHA_DEMO).perfil());
-        assertThrows(ErroNegocio.class, () -> auth.entrar("vendedora@stockflow.demo", "errada"));
+        assertEquals(Perfil.VENDEDOR, auth.entrar("karol@stockflow.demo", ContasDemo.SENHA_DEMO).perfil());
+        assertThrows(ErroNegocio.class, () -> auth.entrar("karol@stockflow.demo", "errada"));
         assertThrows(ErroNegocio.class, () -> auth.entrar("ninguem@stockflow.demo", ContasDemo.SENHA_DEMO));
     }
 
@@ -104,7 +104,7 @@ class PadroesEExtensaoTest {
     // ---------- Integração: View → Facade → Serviço ----------
     @Test void consoleFazLoginEAbreVendaUsandoFactoryMethodPelaFacade() {
         LojaFacade facade = new LojaFacade(loja, new AdaptadorRelatorio(new ExportadorAntigo()));
-        String roteiro = String.join("\n", "vendedora@stockflow.demo", "stockflow2026",
+        String roteiro = String.join("\n", "karol@stockflow.demo", "stockflow2026",
             "2", "V9", "BOLSA", "3", "n", "3", "",   // abrir venda, desconto progressivo (3ª opção)
             "3", "V9",                               // confirmar
             "5", "BOLSA", "1", "R1",                 // vendedora tenta repor → negado no serviço

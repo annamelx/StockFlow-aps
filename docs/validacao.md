@@ -25,7 +25,7 @@ Os testes estão em `src/test/java/br/ufpb/aps/grupo12/ServicoLojaTest.java`. Ca
 4. **Repetição:** confirmar `V1` novamente; consultar histórico, mostrando só uma saída para a venda `V1`.
 5. **Devolução:** registrar `D1` de 1 unidade `BOLSA01` vinculada à `V1`; estoque sobe de 8 para 9; reembolso proporcional líquido R$ 135,00. Repetir `D1`: saldo, receita e histórico não mudam. Tentar outra devolução `D2` de 2 unidades da mesma venda/produto: rejeitar (resta só 1).
 6. **Persistência:** fechar com `0`; reabrir o programa e consultar o saldo e histórico; recuperar `9` para `BOLSA01` e as movimentações.
-7. **Perfil:** clicar em *Sair*, entrar como `vendedora@stockflow.demo` e tentar *Repor estoque* ou *Registrar devolução*: a tela mostra “Perfil não tem autorização…”, mensagem vinda do `ServicoLoja`.
+7. **Perfil:** clicar em *Sair*, entrar como `karol@stockflow.demo` e tentar *Repor estoque* ou *Registrar devolução*: a tela mostra “Perfil não tem autorização…”, mensagem vinda do `ServicoLoja`.
 8. **Strategy + Factory Method:** abrir três vendas de 2 × BOLSA01 (R$ 300,00) trocando só o combo de política: percentual 10% → R$ 270,00; fixo R$ 23,50 → R$ 276,50; progressivo → R$ 285,00. Mostrar que `DescontoPorFaixa` + `CriadorDescontoPorFaixa` foram acrescentados sem mudar serviço nem tela.
 9. **Adapter/Facade:** abrir opção de relatório para exportação legado simulado e demonstrar a chamada pela facade.
 

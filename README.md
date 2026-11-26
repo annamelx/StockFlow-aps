@@ -72,7 +72,7 @@ O tema foi definido pelo professor e utiliza como referência a documentação *
 | Cadastrar produto e repor estoque | ✅ | ❌ |
 | Registrar devolução | ✅ | ❌ |
 
-**Contas de demonstração** (senha `stockflow2026` para as duas): `gerente@stockflow.demo` (gerente) e `vendedora@stockflow.demo` (vendedora). A tela apenas identifica a usuária; quem **bloqueia** uma operação não permitida é o `ServicoLoja.autorizar()`, inclusive no console.
+**Contas de demonstração** (senha `stockflow2026` para as duas): `gerente@stockflow.demo` (gerente) e `karol@stockflow.demo` (vendedora). A tela apenas identifica a usuária; quem **bloqueia** uma operação não permitida é o `ServicoLoja.autorizar()`, inclusive no console.
 
 ### 🖥️ Interface gráfica
 

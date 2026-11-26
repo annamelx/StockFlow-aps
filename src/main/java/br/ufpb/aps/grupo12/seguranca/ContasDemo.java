@@ -13,8 +13,8 @@ public final class ContasDemo implements ContasDeUsuario {
     private final List<Usuario> usuarios = List.of(
         new Usuario("gerente@stockflow.demo", "Gerente da loja", Perfil.GERENTE,
             ServicoAutenticacao.hash("gerente@stockflow.demo", SENHA_DEMO)),
-        new Usuario("vendedora@stockflow.demo", "Vendedora", Perfil.VENDEDOR,
-            ServicoAutenticacao.hash("vendedora@stockflow.demo", SENHA_DEMO)));
+        new Usuario("karol@stockflow.demo", "Karol", Perfil.VENDEDOR,
+            ServicoAutenticacao.hash("karol@stockflow.demo", SENHA_DEMO)));
 
     @Override public Optional<Usuario> buscarPorEmail(String email) {
         if (email == null) return Optional.empty();

@@ -80,7 +80,7 @@ public final class JanelaLogin extends JFrame {
         dt.setForeground(Tema.AZUL_ESCURO);
         demo.add(dt);
         demo.add(linkDemo("Gerente — gerente@stockflow.demo", "gerente@stockflow.demo"));
-        demo.add(linkDemo("Vendedora — vendedora@stockflow.demo", "vendedora@stockflow.demo"));
+        demo.add(linkDemo("Vendedora (Karol) — karol@stockflow.demo", "karol@stockflow.demo"));
         JLabel senhaDemo = new JLabel("Senha: " + ContasDemo.SENHA_DEMO);
         senhaDemo.setFont(Tema.sans(12, Font.PLAIN));
         senhaDemo.setForeground(Tema.TEXTO_SUAVE);
