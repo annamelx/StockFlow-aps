@@ -6,8 +6,8 @@
 |---|---|---|
 | 0:00–1:30 | Problema, escopo e regras mais críticas | Tabela de casos e regras |
 | 1:30–3:30 | Arquitetura, classes UML, fluxo por camadas | `docs/diagramas/classes.puml` |
-| 3:30–5:30 | Quatro padrões GoF, alternativa e extensão Strategy | Código das políticas, Observer, Facade, Adapter |
-| 5:30–10:30 | Demo: venda confirmada, falha estoque, repetição, devolução, perfis, reinício | Console com `--reset-demo` e dados fictícios |
+| 3:30–5:30 | Cinco padrões GoF (Factory Method, Strategy, Observer, Facade, Adapter) e extensão progressiva | `politicas/fabricas`, `DescontoPorFaixa`, testes `PadroesEExtensaoTest` |
+| 5:30–10:30 | Demo: venda confirmada, falha estoque, repetição, devolução, perfis, reinício | Interface gráfica StockFlow após `--reset-demo` (roteiro em `validacao.md`) |
 | 10:30–12:30 | Testes JUnit e simulação dos dois defeitos | Relatório Maven, comparação de mutações |
 | 12:30–14:00 | Revisão crítica antes/depois e uso de IA | Diff, teste de centavos, três interações revisadas |
 | 14:00–15:00 | Limitações, conclusão e fonte de requisitos anterior | README + requisitos + limitações |

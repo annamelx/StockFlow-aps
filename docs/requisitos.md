@@ -4,13 +4,13 @@
 **Tema atribuído:** Sistema de Gestão de Estoque e Vendas  
 **Integrantes:** Anna Karolina, Awanna Costa, Cynthia Souza
 
-> **Proveniência e revisão:** os requisitos obrigatórios vêm de *Orientações Projeto APS 2026.2*, seção 3 e anexo **Grupo 12** na página 9. O professor indica **Toda Chick Bolsas & Cia.** como documentação de referência, mas seu conteúdo não foi fornecido para esta versão. As escolhas detalhadas abaixo (políticas, limites, valores, modelo e interface) são **decisões propostas pela equipe**, a serem confrontadas com a referência quando estiver disponível. **Não se atribui à documentação Toda Chick nenhum requisito ainda não verificado.**
+> **Proveniência e revisão:** os requisitos obrigatórios vêm de *Orientações Projeto APS 2026.2*, seção 3 e anexo **Grupo 12** na página 9. O professor indica **Toda Chick Bolsas & Cia.** (Notion de modelagem e protótipo Figma) como referência; dela foram aproveitados os perfis proprietária/atendente, o catálogo de bolsas e acessórios, o alerta de estoque baixo e o conjunto de telas. As escolhas detalhadas abaixo (políticas, limites, valores, modelo e interface) são **decisões propostas pela equipe**, a serem confrontadas com a modelagem de dados do Notion pela equipe. **Não se atribui à documentação Toda Chick nenhum requisito ainda não verificado.**
 
 ## 1. Problema, objetivo e fronteira
 
 Uma loja precisa manter o saldo de produtos coerente com compras e devoluções. O sistema acadêmico oferece registro de produtos, reposição, abertura e confirmação de vendas, cancelamento de vendas pendentes, devolução vinculada à venda confirmada e consulta de histórico/relatório. Requisitos críticos: não vender além do saldo, não baixar estoque duas vezes, não devolver acima do vendido, manter centavos e estoque consistentes mesmo em falhas.
 
-**Fora do escopo atual:** autenticação por senha, pagamento real, nota fiscal, múltiplas lojas, emissão fiscal, integração bancária, interface gráfica ou web, controle de concorrência distribuída entre diferentes máquinas e documentos não fornecidos. A seleção do perfil é acadêmica, sem autenticação real.
+**Fora do escopo atual:** autenticação por senha, pagamento real, nota fiscal, múltiplas lojas, emissão fiscal, integração bancária, interface web, controle de concorrência distribuída entre diferentes máquinas e documentos não fornecidos. O login usa duas contas fictícias de demonstração (`gerente@stockflow.demo` e `karol@stockflow.demo`, senha `stockflow2026`), sem cadastro de usuários.
 
 ## 2. Perfis e autorização
 
@@ -50,7 +50,13 @@ As permissões são verificadas em `ServicoLoja.autorizar()`, não apenas no con
 **Alternativos/erros:** venda não confirmada; produto ausente na venda; quantidade acima do restante; perfil sem permissão; ID de devolução repetido com dados diferentes. Mesmo ID e dados da devolução repetidos devolvem o registro original **sem repor novamente**.  
 **Aceitação:** `soma(qtd devolvida) ≤ qtd vendida`; soma das restituições totais nunca supera o líquido do item; processamento idempotente; sem estado parcial.
 
-### UC04 — Consultar histórico, saldos e relatório
+### UC04 — Gestão: dashboard, relatórios, contas e cadastros
+
+**Ator:** gerente (dashboard, relatórios, contas, fornecedores, categorias, atendentes); gerente ou atendente (clientes, consulta de contas).  
+**Principal:** a gerente consulta faturamento/lucro do dia e do mês, progresso da meta, vendas da semana e estoque baixo; filtra relatórios de vendas, compras, estoque e financeiro por período; lança e quita contas. Os números são calculados em `ServicoRelatorios`.  
+**Alternativos/erros:** período inválido (fim antes do início); atendente tenta acessar relatório financeiro; exclusões que quebrariam referências.
+
+### UC04 (detalhe original) — Consultar histórico, saldos e relatório
 
 **Ator:** gerente ou vendedor.  
 **Pré-condições:** perfil autorizado.  
@@ -67,11 +73,17 @@ As permissões são verificadas em `ServicoLoja.autorizar()`, não apenas no con
 | RN04 | Devolução exige venda `CONFIRMADA` e item vendido naquela venda. | Vínculo |
 | RN05 | Soma das devoluções de cada item não ultrapassa sua quantidade vendida. | Fronteira |
 | RN06 | Reprocessar mesma devolução pelo ID não gera segundo estoque ou segundo reembolso; ID reutilizado para dados diferentes é rejeitado. | Idempotência |
-| RN07 | Política de desconto em duas opções (**percentual de 0 a 100%** ou **valor fixo de 0 ao subtotal**), total nunca negativo. | Política variável |
+| RN07 | Política de desconto com alternativas intercambiáveis: **percentual (0 a 100%)**, **valor fixo (0 ao subtotal)** e **progressivo por faixa** (≥ R$ 300,00 → 5%; ≥ R$ 500,00 → 10%); total nunca negativo. | Política variável |
 | RN08 | Venda, estoque e movimentações; e devolução, estoque, valores e movimentações são gravados **tudo ou nada**. | Integridade |
 | RN09 | Gerente e vendedor têm permissões distintas, verificadas no serviço. | Autorização |
 | RN10 | Reposição requer quantidade positiva e identificador de lançamento não repetido. | Integridade |
 | RN11 | Produto tem preço positivo, saldos não negativos e ID único. | Cadastro |
+| RN12 | Compra de fornecedor atualiza estoque, custo do produto, movimentação e registro de compra **na mesma transação**; fornecedor precisa existir. | Integridade |
+| RN13 | Não excluir cliente com vendas, fornecedor com compras nem categoria com produtos; venda só referencia cliente existente. | Consistência |
+| RN14 | Conta: `ABERTA → QUITADA` ou `ABERTA → CANCELADA`; quitar de novo não altera a data; cancelada não pode ser quitada. | Estado / idempotência |
+| RN15 | O saldo do produto não é editável no cadastro: só muda por compra, venda ou devolução (o histórico explica o estoque). | Consistência |
+| RN16 | Lucro = valor líquido vendido − custo congelado no item; devoluções descontam reembolso e devolvem o custo. Meta mensal > 0; progresso limitado a 100%. | Cálculo / fronteira |
+| RN17 | Usuária desativada não entra; nunca desativar a única gerente ativa; senha inicial com 6+ caracteres (guardada só como hash). | Autorização |
 
 ### Política de arredondamento proposta
 
@@ -80,7 +92,7 @@ Armazenamento de valores em **centavos (`long`)**, evitando `double` para dinhei
 ## 5. Requisitos não funcionais
 
 - RNF01: Java 21; Maven; testes com JUnit Jupiter.
-- RNF02: arquitetura de domínio, serviços, contrato de persistência, adaptadores e console.
+- RNF02: arquitetura de domínio, serviços, contrato de persistência, adaptadores, interface gráfica Swing e console.
 - RNF03: persistência em um arquivo CSV-snapshot, com troca atômica (dependente de suporte do sistema de arquivos a `ATOMIC_MOVE`).
 - RNF04: os dados não se perdem ao reiniciar; `--reset-demo` recompõe dados fictícios conhecidos.
 - RNF05: não exige conta pessoal, serviço pago nem API externa.
@@ -88,8 +100,8 @@ Armazenamento de valores em **centavos (`long`)**, evitando `double` para dinhei
 
 ## 6. Pontos de revisão com a equipe
 
-1. Localizar e anexar a documentação **Toda Chick Bolsas & Cia.**; preencher a tabela "mantido/alterado/adicionado" comparando os requisitos reais.
+1. Revisar a modelagem de dados do Notion (Toda Chick) e completar a tabela "reaproveitado/adaptado" do README com as entidades e atributos de lá.
 2. Confirmar a decisão didática de permitir somente **gerente** efetuar devoluções.
 3. Confirmar que produtos devolvidos **voltam ao estoque vendável** imediatamente. O professor não especifica triagem de qualidade.
 4. Definir se haverá devolução de dinheiro simulado, crédito na loja ou estorno contábil; esta versão modela somente o **valor de reembolso registrado**, não um pagamento externo.
-5. Confirmar se a interface em console atende à preferência da turma; ela é explicitamente permitida pelo professor.
+5. Interface: entregue em Swing (identidade própria StockFlow) com console alternativo (`--console`).

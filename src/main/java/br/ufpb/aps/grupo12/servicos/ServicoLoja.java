@@ -6,6 +6,8 @@ import br.ufpb.aps.grupo12.persistencia.*;
 import br.ufpb.aps.grupo12.politicas.PoliticaDesconto;
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
+import java.time.Clock;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.logging.Logger;
 
@@ -14,7 +16,22 @@ public final class ServicoLoja {
     private static final Logger LOG = Logger.getLogger(ServicoLoja.class.getName());
     private final Repositorio repositorio;
     private final List<ObservadorEstoque> observadores = new ArrayList<>();
-    public ServicoLoja(Repositorio repositorio) { this.repositorio = Objects.requireNonNull(repositorio); }
+    private final Clock relogio;
+
+    /** Dados complementares da venda (PDV). clienteId vazio = consumidor não identificado. */
+    public record DadosVenda(String clienteId, FormaPagamento formaPagamento, String atendente) {
+        public static final DadosVenda BALCAO = new DadosVenda("", FormaPagamento.DINHEIRO, "");
+    }
+    /** Dados opcionais de compra numa reposição (fornecedor e custo unitário pago). */
+    public record DadosCompra(String fornecedorId, long custoUnitarioCentavos) {}
+
+    public ServicoLoja(Repositorio repositorio) { this(repositorio, Clock.systemDefaultZone()); }
+    /** O relógio é injetado para que testes e dados de demonstração tenham datas controladas. */
+    public ServicoLoja(Repositorio repositorio, Clock relogio) {
+        this.repositorio = Objects.requireNonNull(repositorio);
+        this.relogio = Objects.requireNonNull(relogio);
+    }
+    private LocalDateTime agora() { return LocalDateTime.now(relogio).withNano(0); }
     public void observar(ObservadorEstoque o) { observadores.add(Objects.requireNonNull(o)); }
 
     private static void autorizar(Perfil perfil, boolean requerGerente) {
@@ -52,23 +69,59 @@ public final class ServicoLoja {
         autorizar(perfil, true);
         Objects.requireNonNull(p);
         repositorio.transacionar(e -> {
+            if (!p.categoriaId().equals(Categoria.GERAL) && !e.categorias.containsKey(p.categoriaId()))
+                throw new ErroNegocio("Categoria inexistente: " + p.categoriaId());
             if (e.produtos.putIfAbsent(p.id(), p) != null) throw new ErroNegocio("Produto duplicado.");
             return null;
         });
     }
+    /**
+     * Altera nome, preço, custo, mínimo e categoria. O SALDO não é editável aqui: só muda por
+     * venda, devolução ou reposição, para que o histórico de movimentações explique o estoque.
+     */
+    public Produto editarProduto(Perfil perfil, String id, String nome, long preco, long custo, int minimo,
+                                 String categoriaId) {
+        autorizar(perfil, true);
+        return repositorio.transacionar(e -> {
+            Produto atual = produto(e, id);
+            String cat = categoriaId == null || categoriaId.isBlank() ? Categoria.GERAL : categoriaId;
+            if (!cat.equals(Categoria.GERAL) && !e.categorias.containsKey(cat))
+                throw new ErroNegocio("Categoria inexistente: " + cat);
+            Produto novo = new Produto(id, nome, preco, atual.estoque(), minimo, cat, custo);
+            e.produtos.put(id, novo);
+            return novo;
+        });
+    }
     public Produto reporEstoque(Perfil perfil, String produtoId, int quantidade, String lancamentoId) {
+        return reporEstoque(perfil, produtoId, quantidade, lancamentoId, null);
+    }
+    /**
+     * Reposição; com {@code compra} informada, registra também a compra do fornecedor e atualiza o
+     * custo do produto para o custo pago — tudo na MESMA transação (estoque, movimento, compra).
+     */
+    public Produto reporEstoque(Perfil perfil, String produtoId, int quantidade, String lancamentoId,
+                                DadosCompra compra) {
         autorizar(perfil, true);
         Validacao.id(lancamentoId);
         Validacao.quantidadePositiva(quantidade);
+        LocalDateTime quando = agora();
         Produto atualizado = repositorio.transacionar(e -> {
             String movimentoId = idMovimento("REPOSICAO", lancamentoId);
             if (e.movimentacoes.containsKey(movimentoId))
                 throw new ErroNegocio("Lançamento de reposição duplicado.");
             Produto antigo = produto(e, produtoId);
             Produto novo = antigo.comEstoque(Math.addExact(antigo.estoque(), quantidade));
+            if (compra != null) {
+                if (!e.fornecedores.containsKey(compra.fornecedorId()))
+                    throw new ErroNegocio("Fornecedor inexistente: " + compra.fornecedorId());
+                e.compras.put(lancamentoId, new Compra(lancamentoId, compra.fornecedorId(), produtoId, quantidade,
+                    compra.custoUnitarioCentavos(), quando));
+                novo = new Produto(novo.id(), novo.nome(), novo.precoCentavos(), novo.estoque(),
+                    novo.estoqueMinimo(), novo.categoriaId(), compra.custoUnitarioCentavos());
+            }
             e.produtos.put(produtoId, novo);
             e.movimentacoes.put(movimentoId, new Movimentacao(movimentoId, lancamentoId,
-                produtoId, TipoMovimentacao.ENTRADA_REPOSICAO, quantidade));
+                produtoId, TipoMovimentacao.ENTRADA_REPOSICAO, quantidade, quando));
             return novo;
         });
         publicarDepoisDoCommit(List.of(atualizado));
@@ -77,33 +130,55 @@ public final class ServicoLoja {
 
     public Venda abrirVenda(Perfil perfil, String vendaId, Map<String, Integer> quantidades,
                            PoliticaDesconto politica) {
+        return abrirVenda(perfil, vendaId, quantidades, politica, DadosVenda.BALCAO);
+    }
+    public Venda abrirVenda(Perfil perfil, String vendaId, Map<String, Integer> quantidades,
+                           PoliticaDesconto politica, DadosVenda dados) {
         autorizar(perfil, false);
         Validacao.id(vendaId);
-        Objects.requireNonNull(politica);
-        if (quantidades == null || quantidades.isEmpty()) throw new ErroNegocio("Venda sem itens.");
+        Objects.requireNonNull(dados);
+        LocalDateTime quando = agora();
         return repositorio.transacionar(e -> {
             if (e.vendas.containsKey(vendaId)) throw new ErroNegocio("ID de venda duplicado.");
-            List<String> ids = new ArrayList<>(quantidades.keySet());
-            Collections.sort(ids);
-            List<ItemVenda> brutos = new ArrayList<>();
-            long subtotal = 0;
-            for (String id : ids) {
-                Integer qtd = quantidades.get(id);
-                if (qtd == null) throw new ErroNegocio("Quantidade obrigatória.");
-                Validacao.quantidadePositiva(qtd);
-                Produto p = produto(e, id);
-                ItemVenda item = new ItemVenda(id, qtd, p.precoCentavos(), 0);
-                subtotal = Math.addExact(subtotal, item.brutoCentavos());
-                brutos.add(item);
-            }
-            long desconto = politica.descontoEmCentavos(subtotal);
-            if (desconto < 0 || desconto > subtotal) throw new ErroNegocio("Desconto inválido.");
-            List<ItemVenda> rateados = distribuirDesconto(brutos, subtotal, desconto);
-            Venda v = new Venda(vendaId, EstadoVenda.PENDENTE, rateados,
-                subtotal, desconto, subtotal - desconto, politica.nome());
+            String cliente = dados.clienteId() == null ? "" : dados.clienteId();
+            if (!cliente.isEmpty() && !e.clientes.containsKey(cliente))
+                throw new ErroNegocio("Cliente inexistente: " + cliente);
+            Venda v = montarVenda(e, vendaId, quantidades, politica, cliente, dados, quando);
             e.vendas.put(v.id(), v);
             return v;
         });
+    }
+    /**
+     * Calcula subtotal, desconto rateado e total SEM gravar nada — usado pelo PDV para mostrar
+     * o resumo. Usa exatamente o mesmo código de abrirVenda, então a prévia nunca diverge.
+     */
+    public Venda simularVenda(Perfil perfil, Map<String, Integer> quantidades, PoliticaDesconto politica) {
+        autorizar(perfil, false);
+        LocalDateTime quando = agora();
+        return repositorio.consultar(e -> montarVenda(e, "PREVIA", quantidades, politica, "", DadosVenda.BALCAO, quando));
+    }
+    private Venda montarVenda(EstadoDados e, String vendaId, Map<String, Integer> quantidades,
+                              PoliticaDesconto politica, String cliente, DadosVenda dados, LocalDateTime quando) {
+        Objects.requireNonNull(politica);
+        if (quantidades == null || quantidades.isEmpty()) throw new ErroNegocio("Venda sem itens.");
+        List<String> ids = new ArrayList<>(quantidades.keySet());
+        Collections.sort(ids);
+        List<ItemVenda> brutos = new ArrayList<>();
+        long subtotal = 0;
+        for (String id : ids) {
+            Integer qtd = quantidades.get(id);
+            if (qtd == null) throw new ErroNegocio("Quantidade obrigatória.");
+            Validacao.quantidadePositiva(qtd);
+            Produto p = produto(e, id);
+            ItemVenda item = new ItemVenda(id, qtd, p.precoCentavos(), 0, p.custoCentavos());
+            subtotal = Math.addExact(subtotal, item.brutoCentavos());
+            brutos.add(item);
+        }
+        long desconto = politica.descontoEmCentavos(subtotal);
+        if (desconto < 0 || desconto > subtotal) throw new ErroNegocio("Desconto inválido.");
+        List<ItemVenda> rateados = distribuirDesconto(brutos, subtotal, desconto);
+        return new Venda(vendaId, EstadoVenda.PENDENTE, rateados, subtotal, desconto, subtotal - desconto,
+            politica.nome(), cliente, dados.formaPagamento(), dados.atendente(), quando, null);
     }
 
     /** Rateio por maior resto: soma exata de centavos, mesmo com itens baratos. */
@@ -128,8 +203,7 @@ public final class ServicoLoja {
         List<ItemVenda> resposta = new ArrayList<>();
         for (int i = 0; i < n; i++) {
             ItemVenda original = itens.get(i);
-            resposta.add(new ItemVenda(original.produtoId(), original.quantidade(),
-                original.precoUnitarioCentavos(), partes[i]));
+            resposta.add(original.comDesconto(partes[i]));
         }
         return resposta;
     }
@@ -137,6 +211,7 @@ public final class ServicoLoja {
 
     public Venda confirmarVenda(Perfil perfil, String vendaId) {
         autorizar(perfil, false);
+        LocalDateTime quando = agora();
         Confirmacao resultado = repositorio.transacionar(e -> {
             Venda v = venda(e, vendaId);
             if (v.estado() == EstadoVenda.CONFIRMADA) return new Confirmacao(v, List.of());
@@ -156,9 +231,9 @@ public final class ServicoLoja {
                 alterados.add(atualizado);
                 String movId = idMovimento("VENDA", v.id() + ":" + p.id());
                 e.movimentacoes.put(movId, new Movimentacao(movId, v.id(), p.id(),
-                    TipoMovimentacao.SAIDA_VENDA, i.quantidade()));
+                    TipoMovimentacao.SAIDA_VENDA, i.quantidade(), quando));
             }
-            Venda confirmada = v.comEstado(EstadoVenda.CONFIRMADA);
+            Venda confirmada = v.comEstado(EstadoVenda.CONFIRMADA, quando);
             e.vendas.put(v.id(), confirmada);
             return new Confirmacao(confirmada, List.copyOf(alterados));
         });
@@ -169,7 +244,7 @@ public final class ServicoLoja {
         autorizar(perfil, false);
         return repositorio.transacionar(e -> {
             Venda v = venda(e, vendaId);
-            Venda cancelada = v.comEstado(EstadoVenda.CANCELADA);
+            Venda cancelada = v.comEstado(EstadoVenda.CANCELADA, null);
             e.vendas.put(cancelada.id(), cancelada);
             return cancelada;
         });
@@ -181,6 +256,7 @@ public final class ServicoLoja {
         autorizar(perfil, true);
         Validacao.id(devolucaoId); Validacao.id(vendaId); Validacao.id(produtoId);
         Validacao.quantidadePositiva(quantidade);
+        LocalDateTime quando = agora();
         ResultadoDevolucao r = repositorio.transacionar(e -> {
             Devolucao anterior = e.devolucoes.get(devolucaoId);
             if (anterior != null) {
@@ -201,12 +277,12 @@ public final class ServicoLoja {
             long reembolso = item.restituiAte(jaDevolvido + quantidade) - item.restituiAte(jaDevolvido);
             Produto atual = produto(e, produtoId);
             Produto novo = atual.comEstoque(Math.addExact(atual.estoque(), quantidade));
-            Devolucao d = new Devolucao(devolucaoId, vendaId, produtoId, quantidade, reembolso);
+            Devolucao d = new Devolucao(devolucaoId, vendaId, produtoId, quantidade, reembolso, quando);
             e.produtos.put(produtoId, novo);
             e.devolucoes.put(devolucaoId, d);
             String movId = idMovimento("DEVOLUCAO", devolucaoId);
             e.movimentacoes.put(movId, new Movimentacao(movId, devolucaoId, produtoId,
-                TipoMovimentacao.ENTRADA_DEVOLUCAO, quantidade));
+                TipoMovimentacao.ENTRADA_DEVOLUCAO, quantidade, quando));
             return new ResultadoDevolucao(d, List.of(novo));
         });
         publicarDepoisDoCommit(r.alterados());
@@ -215,6 +291,10 @@ public final class ServicoLoja {
     public List<Produto> consultarProdutos(Perfil perfil) {
         autorizar(perfil, false);
         return repositorio.consultar(e -> List.copyOf(e.produtos.values()));
+    }
+    public List<Produto> consultarProdutosEmAlerta(Perfil perfil) {
+        autorizar(perfil, false);
+        return repositorio.consultar(e -> e.produtos.values().stream().filter(Produto::emAlerta).toList());
     }
     public List<Venda> consultarVendas(Perfil perfil) {
         autorizar(perfil, false);

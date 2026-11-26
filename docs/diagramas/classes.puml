@@ -20,6 +20,7 @@ package "Domínio" {
     - estoque: int
     - estoqueMinimo: int
     + comEstoque(saldo: int): Produto
+    + emAlerta(): boolean
   }
   class ItemVenda <<record>> {
     - produtoId: String
@@ -71,6 +72,7 @@ package "Serviços" {
     + devolver(perfil, id, vendaId, produtoId, quantidade): Devolucao
     + reporEstoque(perfil, produtoId, quantidade, lancamentoId): Produto
     + consultarReceitaLiquidaCentavos(perfil): long
+    + consultarProdutosEmAlerta(perfil): List<Produto>
   }
   class LojaFacade <<Facade>> {
     - servico: ServicoLoja
@@ -82,6 +84,50 @@ package "Serviços" {
     + relatorio(...): String
   }
   LojaFacade --> ServicoLoja
+}
+package "Serviços de gestão" {
+  class ServicoCadastros {
+    + salvarCliente(perfil, cliente, novo): Cliente
+    + excluirCliente(perfil, id): void
+    + salvarFornecedor(...): Fornecedor
+    + salvarCategoria(...): Categoria
+    + cadastrarUsuario(perfil, email, nome, perfil, senha): Usuario
+    + alterarAtivo(perfil, email, ativo): Usuario
+  }
+  class ServicoFinanceiro {
+    - relogio: Clock
+    + lancarConta(...): ContaFinanceira
+    + quitar(perfil, id): ContaFinanceira
+    + definirMeta(perfil, valor): long
+  }
+  class ServicoRelatorios {
+    - relogio: Clock
+    + painel(perfil): Painel
+    + resumo(perfil, periodo): Resumo
+    + vendasPorMes(perfil, ano): long[]
+    + compras(perfil, periodo): ResumoCompras
+  }
+  LojaFacade --> ServicoCadastros
+  LojaFacade --> ServicoFinanceiro
+  LojaFacade --> ServicoRelatorios
+}
+package "Domínio (gestão)" {
+  class Cliente <<record>> { - id; - nome; - telefone; - email }
+  class Fornecedor <<record>> { - id; - nome; - documento; - telefone }
+  class Categoria <<record>> { - id; - nome }
+  class Compra <<record>> { - id; - fornecedorId; - produtoId; - quantidade: int; - custoUnitarioCentavos: long; - data }
+  class ContaFinanceira <<record>> {
+    - tipo: TipoConta
+    - situacao: SituacaoConta
+    - valorCentavos: long
+    + quitar(data): ContaFinanceira
+    + cancelar(): ContaFinanceira
+  }
+  enum FormaPagamento { DINHEIRO; PIX; CARTAO_CREDITO; CARTAO_DEBITO }
+  Venda "0..*" --> "0..1" Cliente : clienteId
+  Venda --> FormaPagamento
+  Compra "0..*" --> "1" Fornecedor
+  Produto "0..*" --> "1" Categoria
 }
 package "Persistência" {
   interface Repositorio {
@@ -103,7 +149,9 @@ package "Persistência" {
     + movimentacoes: Map<String,Movimentacao>
     + copiar(): EstadoDados
   }
+  class RepositorioMemoria
   Repositorio <|.. RepositorioCsvAtomico
+  Repositorio <|.. RepositorioMemoria
   RepositorioCsvAtomico --> EstadoDados
   EstadoDados o-- "0..*" Produto
   EstadoDados o-- "0..*" Venda
@@ -117,8 +165,80 @@ package "Strategy (comportamental)" {
   }
   class DescontoPercentual
   class DescontoFixo
+  class DescontoPorFaixa <<extensão>> {
+    - faixas: NavigableMap<Long,BigDecimal>
+    + {static} padraoDaLoja(): DescontoPorFaixa
+  }
   PoliticaDesconto <|.. DescontoPercentual
   PoliticaDesconto <|.. DescontoFixo
+  PoliticaDesconto <|.. DescontoPorFaixa
+}
+package "Factory Method (criação)" {
+  abstract class CriadorPoliticaDesconto <<Creator>> {
+    + criar(parametro: String): PoliticaDesconto {final}
+    # {abstract} fabricar(parametro: String): PoliticaDesconto
+    + {abstract} descricao(): String
+    + exigeParametro(): boolean
+  }
+  class CriadorDescontoPercentual
+  class CriadorDescontoFixo
+  class CriadorDescontoPorFaixa
+  class CatalogoDescontos {
+    - criadores: List<CriadorPoliticaDesconto>
+    + {static} padrao(): CatalogoDescontos
+  }
+  CriadorPoliticaDesconto <|-- CriadorDescontoPercentual
+  CriadorPoliticaDesconto <|-- CriadorDescontoFixo
+  CriadorPoliticaDesconto <|-- CriadorDescontoPorFaixa
+  CatalogoDescontos o-- "1..*" CriadorPoliticaDesconto
+  CriadorPoliticaDesconto ..> PoliticaDesconto : cria
+}
+package "Segurança" {
+  class Usuario <<record>> {
+    - email: String
+    - nome: String
+    - perfil: Perfil
+    - hashSenha: String
+  }
+  interface ContasDeUsuario { + buscarPorEmail(email): Optional<Usuario> }
+  class ContasDemo
+  class ContasPersistidas
+  ContasDeUsuario <|.. ContasPersistidas
+  class ServicoAutenticacao {
+    - contas: ContasDeUsuario
+    + entrar(email, senha): Usuario
+  }
+  ContasDeUsuario <|.. ContasDemo
+  ServicoAutenticacao --> ContasDeUsuario
+  ServicoAutenticacao ..> Usuario
+}
+package "Interface (View/Controller)" {
+  class JanelaLogin
+  class JanelaPrincipal
+  abstract class Pagina {
+    # ctx: Contexto
+    ~ {abstract} atualizar(): void
+  }
+  class PaginaPdv
+  class PaginaDashboard
+  class PaginaHistorico
+  class PaginaRelatorios
+  abstract class "PaginaListaDetalhe<T>" as PLD
+  class PaginaClientes
+  class PaginaProdutos
+  class ConsoleView
+  Pagina <|-- PaginaPdv
+  Pagina <|-- PaginaDashboard
+  Pagina <|-- PaginaHistorico
+  Pagina <|-- PaginaRelatorios
+  Pagina <|-- PLD
+  PLD <|-- PaginaClientes
+  PLD <|-- PaginaProdutos
+  JanelaPrincipal o-- "1..11" Pagina
+  JanelaLogin --> ServicoAutenticacao
+  JanelaLogin ..> JanelaPrincipal : abre
+  PaginaPdv --> CatalogoDescontos
+  ConsoleView --> CatalogoDescontos
 }
 package "Observer (comportamental)" {
   interface ObservadorEstoque <<Observer>> { + aoAlterarEstoque(evento): void }
@@ -134,12 +254,16 @@ package "Adapter (estrutural)" {
   ExportadorRelatorio <|.. AdaptadorRelatorio
   AdaptadorRelatorio --> ExportadorAntigo
 }
-class App <<console>>
+class App <<montagem>>
 ServicoLoja --> Repositorio : injeção
 ServicoLoja --> PoliticaDesconto : usa
 ServicoLoja --> "0..*" ObservadorEstoque : notifica
 LojaFacade --> ExportadorRelatorio : usa
-App --> LojaFacade : usa
+App ..> LojaFacade : cria
+App ..> JanelaLogin : inicia
+App ..> ConsoleView : inicia (--console)
+Pagina --> LojaFacade : usa
+ConsoleView --> LojaFacade : usa
 ServicoLoja ..> Venda
 ServicoLoja ..> Devolucao
 ServicoLoja ..> Produto
