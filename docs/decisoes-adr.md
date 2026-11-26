@@ -14,6 +14,7 @@
 - **Opções:** uma lista em memória (inadequada); múltiplos CSVs independentes (risco de inconsistência); SQLite (transação nativa); snapshot em um único CSV.
 - **Decisão:** snapshot único com cópia, lock local, temporário e `ATOMIC_MOVE`.
 - **Consequências:** implementável em Java padrão e executável sem banco instalado, mas regrava o arquivo inteiro, depende do sistema de arquivos local e não é arquitetura de produção distribuída.
+- **Atualização (v2):** o mesmo snapshot passou a guardar clientes, fornecedores, categorias, compras, contas, usuárias e configuração, com leitura compatível da versão 1. Optou-se por **não** trocar para banco a poucos dias da entrega: o mecanismo de tudo-ou-nada já testado cobre as novas operações sem código novo de transação.
 - **Evidência:** `RepositorioCsvAtomico.gravarAtomico`, `RepositorioCsvAtomico.executar`; testes `reinicioRecuperaTodasInformacoesPersistidas`, `falhaAntesDoCommitNaoDeixaVendaParcial`, `falhaAntesDoCommitNaoDeixaDevolucaoParcial`.
 
 ## ADR-003 — Padrões GoF: Factory Method, Strategy, Observer, Facade, Adapter
@@ -38,4 +39,5 @@
 - **Opções:** manter só console; aplicação web (exigiria servidor e mais dependências); JavaFX (dependência externa e configuração de módulos); **Swing**, que já vem no JDK.
 - **Decisão:** Swing no pacote `interfacegrafica`, recebendo `LojaFacade`, `CatalogoDescontos` e `AlertaEstoqueMinimo` por construtor (via `Contexto`). O console continua disponível com `--console`, e é usado automaticamente quando não há ambiente gráfico.
 - **Consequências:** nenhuma dependência nova no `pom.xml`; a mesma Facade atende às duas interfaces. A aparência depende do sistema operacional; telas não têm teste automatizado próprio — o fluxo View → Facade → Serviço é testado pelo `ConsoleView`.
+- **Atualização:** a interface passou a cobrir todo o protótipo de referência (dashboard, PDV, histórico, contas, cadastros, relatórios com gráficos) com identidade visual própria. Os novos serviços (`ServicoCadastros`, `ServicoFinanceiro`, `ServicoRelatorios`) também são acessados só pela Facade.
 - **Evidência:** `aplicacao/App.java`, `interfacegrafica/*`, teste `consoleFazLoginEAbreVendaUsandoFactoryMethodPelaFacade`, capturas em `docs/telas/`.

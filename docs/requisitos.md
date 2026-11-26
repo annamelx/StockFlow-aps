@@ -50,7 +50,13 @@ As permissões são verificadas em `ServicoLoja.autorizar()`, não apenas no con
 **Alternativos/erros:** venda não confirmada; produto ausente na venda; quantidade acima do restante; perfil sem permissão; ID de devolução repetido com dados diferentes. Mesmo ID e dados da devolução repetidos devolvem o registro original **sem repor novamente**.  
 **Aceitação:** `soma(qtd devolvida) ≤ qtd vendida`; soma das restituições totais nunca supera o líquido do item; processamento idempotente; sem estado parcial.
 
-### UC04 — Consultar histórico, saldos e relatório
+### UC04 — Gestão: dashboard, relatórios, contas e cadastros
+
+**Ator:** gerente (dashboard, relatórios, contas, fornecedores, categorias, atendentes); gerente ou atendente (clientes, consulta de contas).  
+**Principal:** a gerente consulta faturamento/lucro do dia e do mês, progresso da meta, vendas da semana e estoque baixo; filtra relatórios de vendas, compras, estoque e financeiro por período; lança e quita contas. Os números são calculados em `ServicoRelatorios`.  
+**Alternativos/erros:** período inválido (fim antes do início); atendente tenta acessar relatório financeiro; exclusões que quebrariam referências.
+
+### UC04 (detalhe original) — Consultar histórico, saldos e relatório
 
 **Ator:** gerente ou vendedor.  
 **Pré-condições:** perfil autorizado.  
@@ -72,6 +78,12 @@ As permissões são verificadas em `ServicoLoja.autorizar()`, não apenas no con
 | RN09 | Gerente e vendedor têm permissões distintas, verificadas no serviço. | Autorização |
 | RN10 | Reposição requer quantidade positiva e identificador de lançamento não repetido. | Integridade |
 | RN11 | Produto tem preço positivo, saldos não negativos e ID único. | Cadastro |
+| RN12 | Compra de fornecedor atualiza estoque, custo do produto, movimentação e registro de compra **na mesma transação**; fornecedor precisa existir. | Integridade |
+| RN13 | Não excluir cliente com vendas, fornecedor com compras nem categoria com produtos; venda só referencia cliente existente. | Consistência |
+| RN14 | Conta: `ABERTA → QUITADA` ou `ABERTA → CANCELADA`; quitar de novo não altera a data; cancelada não pode ser quitada. | Estado / idempotência |
+| RN15 | O saldo do produto não é editável no cadastro: só muda por compra, venda ou devolução (o histórico explica o estoque). | Consistência |
+| RN16 | Lucro = valor líquido vendido − custo congelado no item; devoluções descontam reembolso e devolvem o custo. Meta mensal > 0; progresso limitado a 100%. | Cálculo / fronteira |
+| RN17 | Usuária desativada não entra; nunca desativar a única gerente ativa; senha inicial com 6+ caracteres (guardada só como hash). | Autorização |
 
 ### Política de arredondamento proposta
 

@@ -81,6 +81,11 @@ final class Tema {
         return b;
     }
 
+    /** Larguras preferidas das colunas (em pixels), na ordem. */
+    static void larguras(JTable t, int... px) {
+        for (int i = 0; i < px.length && i < t.getColumnCount(); i++) t.getColumnModel().getColumn(i).setPreferredWidth(px[i]);
+    }
+
     static JTextField campo(int colunas) {
         JTextField t = new JTextField(colunas);
         estilizarCampo(t);
@@ -95,12 +100,7 @@ final class Tema {
     }
 
     /** Caixa branca com borda suave, como os cartões do protótipo. */
-    static JPanel cartao(LayoutManager layout) {
-        JPanel p = new JPanel(layout);
-        p.setBackground(Color.WHITE);
-        p.setBorder(new CompoundBorder(new LineBorder(BORDA, 1, true), new EmptyBorder(16, 18, 16, 18)));
-        return p;
-    }
+    static JPanel cartao(LayoutManager layout) { return new Cartao(layout); }
 
     static JScrollPane tabela(JTable t) {
         t.setFont(sans(13, Font.PLAIN));
@@ -117,6 +117,26 @@ final class Tema {
         h.setForeground(TEXTO_SUAVE);
         h.setReorderingAllowed(false);
         h.setBorder(new MatteBorder(0, 0, 1, 0, BORDA));
+        t.setIntercellSpacing(new Dimension(0, 1));
+        t.setDefaultRenderer(Object.class, new DefaultTableCellRenderer() {
+            @Override public java.awt.Component getTableCellRendererComponent(JTable tb, Object v, boolean s, boolean f, int l, int c) {
+                super.getTableCellRendererComponent(tb, v, s, false, l, c);
+                setBorder(new EmptyBorder(0, 12, 0, 12));
+                if (!s) setBackground(l % 2 == 0 ? Color.WHITE : new Color(0xF8FAFD));
+                return this;
+            }
+        });
+        t.setDefaultRenderer(Integer.class, t.getDefaultRenderer(Object.class));
+        h.setDefaultRenderer((tb, v, sel, foc, l, c) -> {
+            JLabel cab = new JLabel(v == null ? "" : v.toString().toUpperCase());
+            cab.setFont(sans(11, Font.BOLD));
+            cab.setForeground(TEXTO_SUAVE);
+            cab.setOpaque(true);
+            cab.setBackground(new Color(0xF1F5FB));
+            cab.setBorder(new CompoundBorder(new MatteBorder(0, 0, 1, 0, BORDA), new EmptyBorder(0, 12, 0, 12)));
+            return cab;
+        });
+        h.setPreferredSize(new Dimension(0, 34));
         JScrollPane s = new JScrollPane(t);
         s.setBorder(new LineBorder(BORDA, 1, true));
         s.getViewport().setBackground(Color.WHITE);

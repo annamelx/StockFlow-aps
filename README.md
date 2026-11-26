@@ -48,14 +48,14 @@ O tema foi definido pelo professor e utiliza como referência a documentação *
 
 ## ✨ Funcionalidades
 
-| Caso de uso | Fluxos da versão inicial |
+| Caso de uso | O que está implementado (com persistência real) |
 |:--|:--|
-| **UC01 · Produtos e estoque** | Cadastrar, consultar e registrar reposição sem duplicidade de lançamento. |
-| **UC02 · Vendas** | Abrir em `PENDENTE`, calcular desconto (percentual, fixo ou progressivo), confirmar com baixa atômica e cancelar pendentes. |
-| **UC03 · Devoluções** | Validar venda confirmada, impedir excesso, calcular restituição e repor estoque uma única vez. |
-| **UC04 · Consultas e relatórios** | Consultar estoque, movimentos, vendas e receita líquida simulada; exportar relatório legado simulado. |
+| **UC01 · Produtos, compras e estoque** | Cadastro/edição de produtos com categoria, preço e custo; **compra de fornecedor** que atualiza estoque, custo e movimentação numa única transação; alerta de estoque mínimo. |
+| **UC02 · Vendas (PDV)** | Carrinho, cliente, forma de pagamento e desconto (percentual, fixo ou progressivo); venda `PENDENTE` → `CONFIRMADA` com baixa atômica, ou `CANCELADA`; confirmar de novo não repete a baixa. |
+| **UC03 · Devoluções** | Só de venda confirmada, só de item vendido, até a quantidade vendida; reembolso pelo valor líquido; mesmo ID não processa duas vezes. |
+| **UC04 · Gestão e relatórios** | Dashboard (faturamento e lucro de hoje/mês, meta mensal, vendas da semana, estoque baixo); relatórios de vendas, compras, estoque e financeiro por período; contas a pagar/receber; cadastros de clientes, fornecedores, categorias e atendentes. |
 
-> As funcionalidades têm regras de sucesso e falha. Não há emissão fiscal nem pagamento real. O login usa **duas contas fictícias de demonstração** (sem cadastro de usuários).
+> Não há emissão fiscal nem pagamento real: forma de pagamento, reembolso e contas são registros simulados.
 
 ### 🔄 Ciclo de uma venda
 
@@ -63,26 +63,30 @@ O tema foi definido pelo professor e utiliza como referência a documentação *
   <img src="./plantuml-diagram.png" alt="">
 </div>
 
-### 👥 Permissões
+### 👥 Perfis e permissões (verificadas nos serviços)
 
-| Operação | Gerente | Vendedor(a) |
+| Operação | Gerente | Atendente |
 |---|:---:|:---:|
-| Consultar estoque, movimentações e relatório | ✅ | ✅ |
-| Abrir/confirmar/cancelar venda pendente | ✅ | ✅ |
-| Cadastrar produto e repor estoque | ✅ | ❌ |
-| Registrar devolução | ✅ | ❌ |
+| PDV: abrir, confirmar e cancelar venda pendente | ✅ | ✅ |
+| Histórico de vendas, contas (consulta), clientes (cadastrar/editar) | ✅ | ✅ |
+| Devolução | ✅ | ❌ |
+| Produtos, compras, fornecedores, categorias, atendentes | ✅ | ❌ |
+| Excluir cliente, lançar/quitar/cancelar contas, meta mensal | ✅ | ❌ |
+| Dashboard e relatórios financeiros | ✅ | ❌ |
 
-**Contas de demonstração** (senha `stockflow2026` para as duas): `gerente@stockflow.demo` (gerente) e `karol@stockflow.demo` (vendedora). A tela apenas identifica a usuária; quem **bloqueia** uma operação não permitida é o `ServicoLoja.autorizar()`, inclusive no console.
+**Contas de demonstração** (senha `stockflow2026`): `gerente@stockflow.demo` (Cynthia Souza, gerente) e `karol@stockflow.demo` (Karol, atendente). Novas atendentes podem ser cadastradas pela gerente em *Cadastrar → Atendentes*. O menu esconde o que o perfil não usa, mas quem **bloqueia** é a camada de serviço (`Autorizacao.exigir` / `ServicoLoja.autorizar`), inclusive no console.
 
 ### 🖥️ Interface gráfica
 
-| Login | Painel |
+| Login | Dashboard (gerente) |
 |---|---|
-| <img src="docs/telas/login.png" width="420"> | <img src="docs/telas/painel.png" width="420"> |
-| **Nova venda** (políticas via Factory Method) | **Devoluções** |
-| <img src="docs/telas/nova-venda.png" width="420"> | <img src="docs/telas/devolucoes.png" width="420"> |
+| <img src="docs/telas/login.png" width="420"> | <img src="docs/telas/gerente-dashboard.png" width="420"> |
+| **PDV / Caixa** (política via Factory Method) | **Relatórios** |
+| <img src="docs/telas/gerente-pdv.png" width="420"> | <img src="docs/telas/gerente-relatorios.png" width="420"> |
+| **Histórico de vendas** | **Produtos** (compra, histórico do item) |
+| <img src="docs/telas/gerente-historico.png" width="420"> | <img src="docs/telas/gerente-produtos.png" width="420"> |
 
-Outras telas: [estoque](docs/telas/estoque.png), [vendas](docs/telas/vendas.png), [movimentações](docs/telas/movimentacoes.png), [relatórios](docs/telas/relatorios.png).
+Outras telas: [contas](docs/telas/gerente-contas.png), [clientes](docs/telas/gerente-clientes.png), [fornecedores](docs/telas/gerente-fornecedores.png), [atendentes](docs/telas/gerente-atendentes.png), [categorias](docs/telas/gerente-categorias.png), [movimentações](docs/telas/gerente-movimentacoes.png), relatórios de [compras](docs/telas/gerente-relatorios-compras.png), [estoque](docs/telas/gerente-relatorios-estoque.png) e [financeiro](docs/telas/gerente-relatorios-financeiro.png); visão da atendente: [PDV](docs/telas/karol-pdv.png), [histórico](docs/telas/karol-historico.png), [contas](docs/telas/karol-contas.png), [clientes](docs/telas/karol-clientes.png).
 
 ## 🏗️ Arquitetura
 
@@ -110,17 +114,17 @@ Estrutura implementada em **Java 21**, usando arquitetura em camadas (MVC na int
 ├── README.md
 ├── src/
 │   ├── main/java/br/ufpb/aps/grupo12/
-│   │   ├── aplicacao/      # App (montagem das dependências) e ConsoleView
+│   │   ├── aplicacao/      # App (montagem), ConsoleView, DadosDemo, RelogioAjustavel
 │   │   ├── interfacegrafica/ # Telas Swing (View/Controller) do StockFlow
-│   │   ├── seguranca/      # Usuario, ContasDemo, ServicoAutenticacao
+│   │   ├── seguranca/      # Usuario, ContasPersistidas, ServicoAutenticacao
 │   │   ├── dominio/        # Produto, Venda, ItemVenda, Devolucao, Movimentacao
-│   │   ├── servicos/       # Casos de uso e Facade
-│   │   ├── persistencia/   # Contrato Repositorio e CSV atômico
+│   │   ├── servicos/       # ServicoLoja, ServicoCadastros, ServicoFinanceiro, ServicoRelatorios, LojaFacade
+│   │   ├── persistencia/   # Contrato Repositorio, CSV atômico e RepositorioMemoria
 │   │   ├── politicas/      # Strategy: percentual, fixo, progressivo
 │   │   │   └── fabricas/   # Factory Method: criadores de políticas
 │   │   ├── observadores/   # Observer de estoque mínimo
 │   │   └── relatorios/     # Adapter e exportação legada simulada
-│   └── test/java/br/ufpb/aps/grupo12/   # ServicoLojaTest, PadroesEExtensaoTest
+│   └── test/java/br/ufpb/aps/grupo12/   # ServicoLojaTest, PadroesEExtensaoTest, GestaoCompletaTest
 ├── dados/                 # CSV gerado em execução, ignorado pelo Git
 └── docs/                  # UML, regras, rastreabilidade, ADRs, testes, apresentação
 ```
@@ -142,7 +146,7 @@ Abre a **janela gráfica** do StockFlow (tela de login). Para usar o menu de tex
 mvn exec:java -Dexec.args="--console"
 ```
 
-Na primeira execução, o programa carrega **8 produtos fictícios** (2 já em estoque baixo). No Windows também há atalhos em `scripts/` (`iniciar-windows.bat`, `iniciar-console-windows.bat`, `reset-demo-windows.bat`, `testar-windows.bat`).
+Na primeira execução, o programa gera a **base de demonstração**: 8 produtos (2 em estoque baixo), 4 categorias, 4 clientes (nomes da equipe), 2 fornecedores, contas e cerca de 2,5 meses de vendas, compras e devoluções. Esse histórico é criado **executando as operações reais dos serviços** com semente fixa, então respeita todas as regras e é reprodutível (`--reset-demo` recria tudo). No Windows também há atalhos em `scripts/` (`iniciar-windows.bat`, `iniciar-console-windows.bat`, `reset-demo-windows.bat`, `testar-windows.bat`).
 
 **Resetar para repetir os testes demonstrativos:**
 
@@ -159,7 +163,7 @@ O reset **substitui os dados do arquivo de demonstração** — não execute em 
 mvn clean test
 ```
 
-Existem **36 cenários JUnit** em duas classes: `ServicoLojaTest` (regras de negócio, fronteiras, perfis, estados, idempotência, persistência real, falhas injetadas de commit, Strategy, Observer, Facade, Adapter) e `PadroesEExtensaoTest` (Factory Method, extensão progressiva com fronteiras R$ 299,99/300,00/499,99/500,00, autenticação, integração console → Facade → serviço). As duas mutações exigidas foram executadas e detectadas — ver [validação](docs/validacao.md).
+Existem **49 cenários JUnit** em três classes: `ServicoLojaTest` (regras de venda, devolução, estoque, perfis, idempotência, falhas de commit, Strategy, Observer, Facade, Adapter), `PadroesEExtensaoTest` (Factory Method, extensão progressiva com fronteiras, autenticação, integração console → Facade) e `GestaoCompletaTest` (cliente/pagamento/data na venda, prévia sem gravação, compra atômica, exclusões bloqueadas por referência, estados das contas, lucro com devolução, meta, usuárias, reinício e leitura do formato CSV antigo, dados de demonstração). As duas mutações exigidas foram executadas e detectadas — ver [validação](docs/validacao.md).
 
 Os resultados oficiais deverão ser capturados em `target/surefire-reports/`. Para dois defeitos introduzidos **temporariamente**, há um procedimento documentado em [validação e mutações](docs/validacao.md). O código entregue deve permanecer sem alterações intencionalmente incorretas.
 
@@ -184,10 +188,12 @@ Os resultados oficiais deverão ser capturados em `target/surefire-reports/`. Pa
 
 ## ⚠️ Limitações conhecidas
 
-- Login apenas com **duas contas fictícias** fixas (`ContasDemo`); não há cadastro de usuários nem recuperação de senha.
+- Login com contas fictícias; a gerente cadastra/desativa atendentes, mas não há recuperação de senha nem troca de senha.
 - Os alertas do Observer ficam em memória durante a sessão; o estado do estoque, esse sim, é persistido.
 - O CSV atômico depende de `ATOMIC_MOVE` no sistema de arquivos local; não é solução para várias máquinas.
-- Reembolso e receita são valores simulados: não há pagamento, estorno real nem nota fiscal.
+- Pagamento, reembolso e contas são registros simulados: não há integração com banco, maquininha nem nota fiscal.
+- O botão *Imprimir / PDF* usa a impressão do sistema (no Windows, escolha “Microsoft Print to PDF”).
+- As datas dos dados de demonstração são relativas ao dia em que `--reset-demo` é executado.
 - Devolução repõe o produto direto ao estoque vendável (sem triagem de avaria).
 
 ## 👩‍💻 Equipe

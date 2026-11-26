@@ -24,6 +24,7 @@ public final class ServicoAutenticacao {
         byte[] informado = hash(u.email(), senha).getBytes(StandardCharsets.UTF_8);
         if (!MessageDigest.isEqual(esperado, informado))
             throw new ErroNegocio("E-mail ou senha incorretos.");
+        if (!u.ativo()) throw new ErroNegocio("Acesso desativado. Procure a gerente.");
         return u;
     }
 

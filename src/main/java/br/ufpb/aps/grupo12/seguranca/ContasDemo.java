@@ -10,8 +10,8 @@ import java.util.Optional;
  */
 public final class ContasDemo implements ContasDeUsuario {
     public static final String SENHA_DEMO = "stockflow2026";
-    private final List<Usuario> usuarios = List.of(
-        new Usuario("gerente@stockflow.demo", "Gerente da loja", Perfil.GERENTE,
+    public static final List<Usuario> USUARIOS = List.of(
+        new Usuario("gerente@stockflow.demo", "Cynthia Souza", Perfil.GERENTE,
             ServicoAutenticacao.hash("gerente@stockflow.demo", SENHA_DEMO)),
         new Usuario("karol@stockflow.demo", "Karol", Perfil.VENDEDOR,
             ServicoAutenticacao.hash("karol@stockflow.demo", SENHA_DEMO)));
@@ -19,6 +19,6 @@ public final class ContasDemo implements ContasDeUsuario {
     @Override public Optional<Usuario> buscarPorEmail(String email) {
         if (email == null) return Optional.empty();
         String chave = email.trim().toLowerCase();
-        return usuarios.stream().filter(u -> u.email().equals(chave)).findFirst();
+        return USUARIOS.stream().filter(u -> u.email().equals(chave)).findFirst();
     }
 }

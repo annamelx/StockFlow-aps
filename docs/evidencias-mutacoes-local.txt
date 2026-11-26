@@ -2,22 +2,19 @@ Evidência de detecção de defeitos — Grupo 12 — 26/11/2026
 Cópia temporária do projeto; compilação javac (JDK 21); runner local equivalente ao JUnit (sem acesso ao Maven Central).
 
 === Base (sem mutação) ===
-Total: 36  passaram: 36  falharam: 0
+Total: 49  passaram: 49  falharam: 0
 
 === Mutação 1: ServicoLoja.confirmarVenda ===
 - if (v.estado() == EstadoVenda.CONFIRMADA) return new Confirmacao(v, List.of());
-+ // MUTACAO 1: retorno idempotente removido
++ // MUTACAO 1
 FALHA ServicoLojaTest.confirmarDuasVezesNaoBaixaEstoqueNovamente -> ErroNegocio: Venda cancelada não pode ser confirmada.
 FALHA ServicoLojaTest.observerSoRecebeEventoAposCommitEAlertaEstoqueMinimo -> ErroNegocio: Venda cancelada não pode ser confirmada.
-Total: 36  passaram: 34  falharam: 2
-Código restaurado -> Total: 36  passaram: 36  falharam: 0
+Total: 49  passaram: 47  falharam: 2
+Código restaurado -> Total: 49  passaram: 49  falharam: 0
 
 === Mutação 2: ServicoLoja.devolver ===
 - if (v.estado() != EstadoVenda.CONFIRMADA)
 + if (false && v.estado() != EstadoVenda.CONFIRMADA)
 FALHA ServicoLojaTest.devolucaoDeVendaPendenteEhRejeitada -> AssertionError: nenhuma exceção lançada
-Total: 36  passaram: 35  falharam: 1
-Código restaurado -> Total: 36  passaram: 36  falharam: 0
-
-Observação: a mensagem da mutação 1 ("Venda cancelada...") mostra que, sem o retorno antecipado,
-uma venda CONFIRMADA cai no ramo de estado inválido — o teste detecta a quebra da idempotência.
+Total: 49  passaram: 48  falharam: 1
+Código restaurado -> Total: 49  passaram: 49  falharam: 0
