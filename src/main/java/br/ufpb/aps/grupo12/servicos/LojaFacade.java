@@ -28,5 +28,8 @@ public final class LojaFacade {
     }
     public String relatorio(Perfil perfil) { return servico.exportarRelatorio(perfil, exportador); }
     public List<Movimentacao> historico(Perfil perfil) { return servico.consultarMovimentacoes(perfil); }
+    public List<Produto> emAlerta(Perfil perfil) { return servico.consultarProdutosEmAlerta(perfil); }
+    public List<Venda> vendas(Perfil perfil) { return servico.consultarVendas(perfil); }
+    public List<Devolucao> devolucoes(Perfil perfil) { return servico.consultarDevolucoes(perfil); }
     public long receitaLiquida(Perfil perfil) { return servico.consultarReceitaLiquidaCentavos(perfil); }
 }

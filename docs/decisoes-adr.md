@@ -16,13 +16,13 @@
 - **Consequências:** implementável em Java padrão e executável sem banco instalado, mas regrava o arquivo inteiro, depende do sistema de arquivos local e não é arquitetura de produção distribuída.
 - **Evidência:** `RepositorioCsvAtomico.gravarAtomico`, `RepositorioCsvAtomico.executar`; testes `reinicioRecuperaTodasInformacoesPersistidas`, `falhaAntesDoCommitNaoDeixaVendaParcial`, `falhaAntesDoCommitNaoDeixaDevolucaoParcial`.
 
-## ADR-003 — Quatro padrões GoF: Strategy, Observer, Facade, Adapter
+## ADR-003 — Padrões GoF: Factory Method, Strategy, Observer, Facade, Adapter
 
 - **Contexto:** variar política de desconto, emitir alertas e adaptar a apresentação sem acoplar domínio à interface ou ao legado simulado.
 - **Opções:** múltiplos `if/else` nos serviços; herança indiscriminada; padrões adequados a mudanças concretas.
-- **Decisão:** Strategy para desconto; Observer para alertas pós-commit; Facade para simplificação da interface; Adapter para exportação legada simulada.
+- **Decisão:** Strategy para desconto; Factory Method para criar a política escolhida na tela sem `if/else` (criação delegada a `fabricar()` sobrescrito); Observer para alertas pós-commit; Facade para simplificação da interface; Adapter para exportação legada simulada. Singleton foi descartado: as dependências são criadas uma vez no `App` e injetadas, o que mantém os testes isolados.
 - **Consequências:** mais abstrações para um sistema pequeno, mas extensionabilidade demonstrável e testes isolados; não utilizar Singleton desnecessariamente.
-- **Evidência:** classes nos pacotes `politicas`, `observadores`, `servicos/LojaFacade`, `relatorios` e testes relacionados no `ServicoLojaTest`.
+- **Evidência:** classes nos pacotes `politicas`, `politicas/fabricas`, `observadores`, `servicos/LojaFacade`, `relatorios`; testes em `ServicoLojaTest` e `PadroesEExtensaoTest`; extensão `DescontoPorFaixa`.
 
 ## ADR-004 — Testes de regras, falhas e recuperação
 
@@ -31,3 +31,11 @@
 - **Decisão:** testes JUnit 5 em `@TempDir`; cenários de sucesso/falha por regras; simulação de falha antes do `ATOMIC_MOVE` por interceptor; documentação de duas mutações controladas.
 - **Consequências:** testes mais extensos, porém reproduzíveis e independentes de contas/serviços pagos.
 - **Evidência:** `src/test/java/.../ServicoLojaTest.java`; `docs/validacao.md`.
+
+## ADR-005 — Interface gráfica Swing sobre a Facade
+
+- **Contexto:** o professor sugeriu uma interface além do console; ela não pode concentrar regras nem acessar persistência.
+- **Opções:** manter só console; aplicação web (exigiria servidor e mais dependências); JavaFX (dependência externa e configuração de módulos); **Swing**, que já vem no JDK.
+- **Decisão:** Swing no pacote `interfacegrafica`, recebendo `LojaFacade`, `CatalogoDescontos` e `AlertaEstoqueMinimo` por construtor (via `Contexto`). O console continua disponível com `--console`, e é usado automaticamente quando não há ambiente gráfico.
+- **Consequências:** nenhuma dependência nova no `pom.xml`; a mesma Facade atende às duas interfaces. A aparência depende do sistema operacional; telas não têm teste automatizado próprio — o fluxo View → Facade → Serviço é testado pelo `ConsoleView`.
+- **Evidência:** `aplicacao/App.java`, `interfacegrafica/*`, teste `consoleFazLoginEAbreVendaUsandoFactoryMethodPelaFacade`, capturas em `docs/telas/`.

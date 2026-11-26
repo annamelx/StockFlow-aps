@@ -175,6 +175,11 @@ public final class RepositorioCsvAtomico implements Repositorio {
             e.produtos.put("BOLSA01", new Produto("BOLSA01", "Bolsa transversal", 15000, 10, 3));
             e.produtos.put("BOLSA02", new Produto("BOLSA02", "Bolsa de ombro", 20000, 6, 2));
             e.produtos.put("CARTEIRA01", new Produto("CARTEIRA01", "Carteira feminina", 4500, 8, 2));
+            e.produtos.put("MOCHILA01", new Produto("MOCHILA01", "Mochila couro sintético", 18990, 5, 2));
+            e.produtos.put("CLUTCH01", new Produto("CLUTCH01", "Clutch festa dourada", 12990, 2, 2));
+            e.produtos.put("NECESSAIRE01", new Produto("NECESSAIRE01", "Nécessaire matelassê", 5990, 12, 3));
+            e.produtos.put("TOTE01", new Produto("TOTE01", "Bolsa tote grande", 24990, 1, 2));
+            e.produtos.put("CHAVEIRO01", new Produto("CHAVEIRO01", "Chaveiro pompom", 1990, 20, 5));
             return null;
         });
     }

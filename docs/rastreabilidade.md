@@ -1,6 +1,6 @@
 # Matriz de rastreabilidade — requisitos → código → teste → demonstração
 
-**Os identificadores RN01 a RN11 foram definidos em `requisitos.md`.** Todos os métodos são relativos a `src/main/java/br/ufpb/aps/grupo12/`. Os testes pertencem a `src/test/java/br/ufpb/aps/grupo12/ServicoLojaTest.java`.
+**Os identificadores RN01 a RN11 foram definidos em `requisitos.md`.** Todos os métodos são relativos a `src/main/java/br/ufpb/aps/grupo12/`. Os testes pertencem a `src/test/java/br/ufpb/aps/grupo12/ServicoLojaTest.java` (ST) e `PadroesEExtensaoTest.java` (PE).
 
 | Caso / regra | Implementação responsável | Teste automatizado | Evidência na apresentação |
 |---|---|---|---|
@@ -18,6 +18,10 @@
 | UC01 / Observer | `observadores/*`, `ServicoLoja.publicarDepoisDoCommit` | `observerSoRecebeEventoAposCommitEAlertaEstoqueMinimo` | Baixar saldo até mínimo e mostrar alerta |
 | UC02 / Strategy | `politicas/*` | `strategyFixoEhExtensaoSemModificarServico` | Mostrar desconto percentual x fixo |
 | UC04 / Facade | `servicos/LojaFacade` | `facadeEncaminhaFluxoCompletoParaOsServicos` | Executar fluxo a partir de App/Facade |
+| UC02 / RN07 extensão progressiva | `politicas/DescontoPorFaixa`, `politicas/fabricas/CriadorDescontoPorFaixa` | PE `descontoProgressivoRespeitaFronteirasDasFaixas`, PE `extensaoProgressivaFuncionaNoServicoSemAlterarSeuContrato` | Tela Nova venda → “Progressivo”: R$ 300,00 dá R$ 15,00 |
+| UC02 / Factory Method | `politicas/fabricas/CriadorPoliticaDesconto.criar/fabricar`, `PaginaNovaVenda.abrirVenda`, `ConsoleView.abrirVenda` | PE `factoryMethodCadaCriadorConcretoProduzSuaPolitica`, PE `factoryMethodPermiteNovoCriadorSobrescrevendoApenasFabricar`, PE `factoryMethodRejeitaParametroInvalidoSemCriarVenda` | Trocar política no combo sem mudar a tela |
+| RN09 / login dos perfis | `seguranca/ServicoAutenticacao.entrar`, `ContasDemo` | PE `autenticacaoDevolvePerfilCorretoERejeitaSenhaErrada`, PE `consoleFazLoginEAbreVendaUsandoFactoryMethodPelaFacade` | Entrar como vendedora e tentar repor estoque |
+| UC01/UC04 / alerta de estoque | `dominio/Produto.emAlerta`, `ServicoLoja.consultarProdutosEmAlerta` | PE `produtosEmAlertaIncluemSaldoIgualAoMinimo` | Painel mostra “Estoque baixo” |
 | UC04 / Adapter | `relatorios/AdaptadorRelatorio`, `ExportadorAntigo` | `adapterExportaRelatorioParaFormatoLegado` | Mostrar CSV exportado |
 
 > As regras RN01 a RN11 têm cobertura direta no conjunto de testes. A equipe deve verificar novamente a matriz após qualquer alteração no código.

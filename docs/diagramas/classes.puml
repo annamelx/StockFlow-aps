@@ -20,6 +20,7 @@ package "Domínio" {
     - estoque: int
     - estoqueMinimo: int
     + comEstoque(saldo: int): Produto
+    + emAlerta(): boolean
   }
   class ItemVenda <<record>> {
     - produtoId: String
@@ -71,6 +72,7 @@ package "Serviços" {
     + devolver(perfil, id, vendaId, produtoId, quantidade): Devolucao
     + reporEstoque(perfil, produtoId, quantidade, lancamentoId): Produto
     + consultarReceitaLiquidaCentavos(perfil): long
+    + consultarProdutosEmAlerta(perfil): List<Produto>
   }
   class LojaFacade <<Facade>> {
     - servico: ServicoLoja
@@ -117,8 +119,68 @@ package "Strategy (comportamental)" {
   }
   class DescontoPercentual
   class DescontoFixo
+  class DescontoPorFaixa <<extensão>> {
+    - faixas: NavigableMap<Long,BigDecimal>
+    + {static} padraoDaLoja(): DescontoPorFaixa
+  }
   PoliticaDesconto <|.. DescontoPercentual
   PoliticaDesconto <|.. DescontoFixo
+  PoliticaDesconto <|.. DescontoPorFaixa
+}
+package "Factory Method (criação)" {
+  abstract class CriadorPoliticaDesconto <<Creator>> {
+    + criar(parametro: String): PoliticaDesconto {final}
+    # {abstract} fabricar(parametro: String): PoliticaDesconto
+    + {abstract} descricao(): String
+    + exigeParametro(): boolean
+  }
+  class CriadorDescontoPercentual
+  class CriadorDescontoFixo
+  class CriadorDescontoPorFaixa
+  class CatalogoDescontos {
+    - criadores: List<CriadorPoliticaDesconto>
+    + {static} padrao(): CatalogoDescontos
+  }
+  CriadorPoliticaDesconto <|-- CriadorDescontoPercentual
+  CriadorPoliticaDesconto <|-- CriadorDescontoFixo
+  CriadorPoliticaDesconto <|-- CriadorDescontoPorFaixa
+  CatalogoDescontos o-- "1..*" CriadorPoliticaDesconto
+  CriadorPoliticaDesconto ..> PoliticaDesconto : cria
+}
+package "Segurança" {
+  class Usuario <<record>> {
+    - email: String
+    - nome: String
+    - perfil: Perfil
+    - hashSenha: String
+  }
+  interface ContasDeUsuario { + buscarPorEmail(email): Optional<Usuario> }
+  class ContasDemo
+  class ServicoAutenticacao {
+    - contas: ContasDeUsuario
+    + entrar(email, senha): Usuario
+  }
+  ContasDeUsuario <|.. ContasDemo
+  ServicoAutenticacao --> ContasDeUsuario
+  ServicoAutenticacao ..> Usuario
+}
+package "Interface (View/Controller)" {
+  class JanelaLogin
+  class JanelaPrincipal
+  abstract class Pagina {
+    # ctx: Contexto
+    ~ {abstract} atualizar(): void
+  }
+  class PaginaNovaVenda
+  class PaginaDevolucoes
+  class ConsoleView
+  Pagina <|-- PaginaNovaVenda
+  Pagina <|-- PaginaDevolucoes
+  JanelaPrincipal o-- "7" Pagina
+  JanelaLogin --> ServicoAutenticacao
+  JanelaLogin ..> JanelaPrincipal : abre
+  PaginaNovaVenda --> CatalogoDescontos
+  ConsoleView --> CatalogoDescontos
 }
 package "Observer (comportamental)" {
   interface ObservadorEstoque <<Observer>> { + aoAlterarEstoque(evento): void }
@@ -134,12 +196,16 @@ package "Adapter (estrutural)" {
   ExportadorRelatorio <|.. AdaptadorRelatorio
   AdaptadorRelatorio --> ExportadorAntigo
 }
-class App <<console>>
+class App <<montagem>>
 ServicoLoja --> Repositorio : injeção
 ServicoLoja --> PoliticaDesconto : usa
 ServicoLoja --> "0..*" ObservadorEstoque : notifica
 LojaFacade --> ExportadorRelatorio : usa
-App --> LojaFacade : usa
+App ..> LojaFacade : cria
+App ..> JanelaLogin : inicia
+App ..> ConsoleView : inicia (--console)
+Pagina --> LojaFacade : usa
+ConsoleView --> LojaFacade : usa
 ServicoLoja ..> Venda
 ServicoLoja ..> Devolucao
 ServicoLoja ..> Produto

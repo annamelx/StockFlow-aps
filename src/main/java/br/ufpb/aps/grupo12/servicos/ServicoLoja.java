@@ -216,6 +216,10 @@ public final class ServicoLoja {
         autorizar(perfil, false);
         return repositorio.consultar(e -> List.copyOf(e.produtos.values()));
     }
+    public List<Produto> consultarProdutosEmAlerta(Perfil perfil) {
+        autorizar(perfil, false);
+        return repositorio.consultar(e -> e.produtos.values().stream().filter(Produto::emAlerta).toList());
+    }
     public List<Venda> consultarVendas(Perfil perfil) {
         autorizar(perfil, false);
         return repositorio.consultar(e -> List.copyOf(e.vendas.values()));
